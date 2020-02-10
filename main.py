@@ -91,8 +91,8 @@ def inverseDocumentFrequency(sentences, vocabulary):
 morph = pm.MorphAnalyzer()
 path =  'H:\Python\dplm\data'
 os.chdir(path)
-dir_work = os.listdir(path)                 # dir_work получается массивом, хранящим имена файлов
-number_of_documents = len (dir_work)                          #получаем количество файлов в директории
+dir_work = os.listdir(path)                                     # список, хранящий имена файлов
+number_of_documents = len (dir_work)                            #получаем количество файлов в директории
 
 document = []
 vocabulary = []
