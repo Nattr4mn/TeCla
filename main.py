@@ -47,6 +47,17 @@ def createGraph():
     return graph
 
 
+def struc():
+    structure = []
+    # for name_text in file_list:
+    #     for sent in range(len(corpus[name_text])):
+    for word in range(len(corpus['text_0.txt'][0])):
+        if morph_parametres['text_0.txt'][0][word].tag.POS != None:
+            structure.append(morph_parametres['text_0.txt'][0][word].tag.gender )
+        else:
+            structure.append(morph_parametres['text_0.txt'][0][word].tag)
+    return structure
+
 # def termFrequency():
 #     tf = []; nk = 0
 #     for i in range(len(sentences)):
@@ -93,8 +104,7 @@ for name_text in file_list:
 morph_parametres = morphAnalysis()
 dictionary = createDictionary()
 graph = createGraph()
-
+structure = struc()
 np.set_printoptions(threshold=sys.maxsize, linewidth=sys.maxsize)
-for key, value in corpus.items():
-    print(key)
-    for x in value: print(x)
+print(corpus['text_0.txt'][0])
+print(structure)
