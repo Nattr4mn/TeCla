@@ -34,7 +34,8 @@ path = os.getcwd() + '\documents'
 os.chdir(path)
 file_list = os.listdir(path)                                     # список, хранящий имена файлов
 
-dictionary = []
+dictionary = {}
+word_probability = {}
 word_count = 0
 sentence_count = 0
 number_of_features = 0
@@ -87,9 +88,11 @@ for name_text in file_list:
         # Добавляем количество слов из обрабатываемого предложения к счетчику слов
         number_of_words += len(document[sent])
 
+        # Создание словаря
         for word in range(len(document[sent])):
-            dictionary.append(document[sent][word])
+            dictionary.setdefault(document[sent][word], 0)
 
+        # Подсчет количества каждого морфологического признака
         for feature in range(len(morph_features[sent])):
 
             if morph_features[sent][feature].tag.POS != None:
@@ -110,25 +113,33 @@ for name_text in file_list:
                     dump = 'NUMB'
                 other_count[dump] += 1
 
+    # Подсчет встречи слова
+    for sent in range(len(document)):
+        for word in document[sent]:
+                dictionary[word] += 1
+
     document.clear()
     morph_features.clear()
 
-dictionary = set(dictionary)
-dictionary = sorted(dictionary)
+# Вероятность появления слова
+for word in dictionary:
+    word_probability.setdefault(word, dictionary[word]/number_of_words)
+
+# Сумма морфологических признаков
 number_pos = countingFeatures(pos_count)
 number_case = countingFeatures(case_count)
 number_number = countingFeatures(number_count)
 number_gender = countingFeatures(gender_count)
 number_other = countingFeatures(other_count)
 
+# Вероятность появления морфологических признаков
 pos_prob = countingProbability(number_pos, pos_count)
 case_prob = countingProbability(number_case, case_count)
 number_prob = countingProbability(number_number, number_count)
 gender_prob = countingProbability(number_gender, gender_count)
 other_prob = countingProbability(number_other, other_count)
 
-
-print (dictionary)
+print(word_probability)
 
 
 # graph = np.zeros((len(dictionary), len(dictionary)))
@@ -136,7 +147,7 @@ print (dictionary)
 # np.set_printoptions(threshold=sys.maxsize, linewidth=sys.maxsize)
 # print(graph)
 
-
+#
 # def createGraph(graph):
 #     for dict in range(len(dictionary)):
 #         for name_text in file_list:
