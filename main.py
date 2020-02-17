@@ -92,6 +92,12 @@ for name_text in file_list:
         for word in range(len(document[sent])):
             dictionary.setdefault(document[sent][word], 0)
 
+        for feature in range(len(morph_features[sent])):
+            sentence = []
+            sentence.append(str(morph_features[sent][feature].tag))
+            if sentence not in unique_structures:
+                unique_structures.append(sentence)
+
         # Подсчет количества каждого морфологического признака
         for feature in range(len(morph_features[sent])):
 
@@ -139,7 +145,7 @@ number_prob = countingProbability(number_number, number_count)
 gender_prob = countingProbability(number_gender, gender_count)
 other_prob = countingProbability(number_other, other_count)
 
-print(word_probability)
+print(unique_structures)
 
 
 # graph = np.zeros((len(dictionary), len(dictionary)))
