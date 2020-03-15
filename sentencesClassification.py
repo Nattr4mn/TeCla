@@ -77,9 +77,6 @@ class TextPreprocessing:
         self.__saveStructuresSentences()
 
 
-
-
-
     def __createStructureSentences(self, morph_features):
         dump = [str(feature.tag) for feature in morph_features]
         if dump not in self.unique_sentences_structures:
