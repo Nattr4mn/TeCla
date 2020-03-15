@@ -17,6 +17,16 @@ class TextPreprocessing:
         self.quantity_words = 0
         self.quantity_sentences = 0
         self.quantity_texts = 0
+        self.quantity_pos = 0
+        self.quantity_case = 0
+        self.quantity_number = 0
+        self.quantity_gender = 0
+        self.quantity_other = 0
+        self.pos_prob = {}
+        self.case_prob = {}
+        self.number_prob = {}
+        self.gender_prob = {}
+        self.other_prob = {}
         # Часть речи
         self.pos_count = { 'NOUN': 0, 'ADJF': 0, 'ADJS': 0, 'COMP': 0, 'VERB': 0, 'INFN': 0, 'PRTF': 0, 'PRTS': 0, 'GRND': 0,
                            'NUMR': 0, 'ADVB': 0, 'NPRO': 0, 'PRED': 0, 'PREP': 0, 'CONJ': 0, 'PRCL': 0, 'INTJ': 0 }
@@ -46,8 +56,28 @@ class TextPreprocessing:
                 document[ind_sent] = self.__deletePunctuation(document[ind_sent])
                 document[ind_sent] = self.__normalForm(document[ind_sent])
                 self.quantity_words += len(document[ind_sent])
+                morph_features = [self.morph.parse(word)[0] for word in document[ind_sent]]
+                self.__createDictionary(morph_features)
 
-        self.saveStructuresSentences()
+        # Количество признаков
+        self.quantity_pos = self.__quantityFeatures(self.pos_count)
+        self.quantity_case = self.__quantityFeatures(self.case_count)
+        self.quantity_number = self.__quantityFeatures(self.number_count)
+        self.quantity_gender = self.__quantityFeatures(self.gender_count)
+        self.quantity_other = self.__quantityFeatures(self.other_count)
+
+        # Вероятность появления морфологических признаков
+        self.pos_prob = self.__countingProbability(self.quantity_pos, self.pos_count)
+        self.case_prob = self.__countingProbability(self.quantity_case, self.case_count)
+        self.number_prob = self.__countingProbability(self.quantity_number, self.number_count)
+        self.gender_prob = self.__countingProbability(self.quantity_gender, self.gender_count)
+        self.other_prob = self.__countingProbability(self.quantity_other, self.other_count)
+
+        self.dictionary = sorted(self.dictionary)
+        self.__saveStructuresSentences()
+
+
+
 
 
     def __createStructureSentences(self, morph_features):
@@ -57,7 +87,9 @@ class TextPreprocessing:
 
 
     def __createDictionary(self, sentence):
-
+        for word in sentence:
+            if word not in self.dictionary:
+                self.dictionary.append(word)
 
 
     def __countingFeatures(self, morph_features):
@@ -79,6 +111,21 @@ class TextPreprocessing:
                 if dump.find('NUMB') != -1:
                     dump = 'NUMB'
                 self.other_count[dump] += 1
+
+
+    def __quantityFeatures(self, features):
+        number_of_features = 0
+        for feature in features:
+            number_of_features += features[feature]
+        return number_of_features
+
+
+    def __countingProbability(self, quantity, features):
+        features_probability = {}
+        for feature in features:
+            probability = features[feature] / quantity
+            features_probability.setdefault(feature, probability)
+        return features_probability
 
 
     def __deletePunctuation(self, sentence):
