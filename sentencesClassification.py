@@ -1,8 +1,10 @@
 import chardet
 import string
+import pymorphy2 as pm
 from nltk.tokenize import word_tokenize
 from nltk.tokenize import sent_tokenize
-import pymorphy2 as pm
+from razdel import tokenize
+from razdel import sentenize
 import os
 import csv
 
@@ -22,6 +24,7 @@ class TextPreprocessing:
         self.quantity_number = 0
         self.quantity_gender = 0
         self.quantity_other = 0
+        self.quantity_sent_struc = []
         self.pos_prob = {}
         self.case_prob = {}
         self.number_prob = {}
@@ -49,7 +52,8 @@ class TextPreprocessing:
             self.quantity_texts += 1
             self.quantity_sentences += len(document)
             for ind_sent in range(len(document)):
-                document[ind_sent] = word_tokenize(document[ind_sent])
+                document[ind_sent] = list(tokenize(document[ind_sent]))
+                document[ind_sent] = [_.text for _ in document[ind_sent]]
                 morph_features = [self.morph.parse(word)[0] for word in document[ind_sent]]
                 self.__countingFeatures(morph_features)
                 self.__createStructureSentences(morph_features)
@@ -76,11 +80,18 @@ class TextPreprocessing:
         self.dictionary = sorted(self.dictionary)
         self.__saveStructuresSentences()
 
+        print(self.quantity_sent_struc)
+        print(self.quantity_sentences)
+
 
     def __createStructureSentences(self, morph_features):
         dump = [str(feature.tag) for feature in morph_features]
         if dump not in self.unique_sentences_structures:
             self.unique_sentences_structures.append(dump)
+            self.quantity_sent_struc.append(1)
+        else:
+            ind = self.unique_sentences_structures.index(dump)
+            self.quantity_sent_struc[ind] += 1
 
 
     def __createDictionary(self, sentence):
