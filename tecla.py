@@ -20,7 +20,7 @@ class Text:
         self.__document = []
         self.__generated_text = []
         self.__text_structure = []
-        self.__dictionary = {}
+        self.__dictionary = []
         self.__natural_graph = []
         self.__gen_graph = []
 
@@ -33,16 +33,45 @@ class Text:
             with open(file, encoding = self.__encod) as text:
                 self.__document = text.read()
 
-            self.__document = Partition.textTokenize(self.__document)
-            self.__text_structure = Partition.createSentStruct(self.__document)
-            self.__dictionary = Partition.createDictionary(self.__document)
-            self.__natural_graph = Graph.createGraph(self.__dictionary, self.__document)
-            np.set_printoptions(threshold=sys.maxsize, linewidth=sys.maxsize)
-            print(self.__natural_graph)
-            self.__textGeneration()
-            self.__gen_graph = Graph.createGraph(self.__dictionary, self.__generated_text)
-            self.saveGenText(name_text)
+            self.__document = self.__textTokenize(self.__document)
+            print("Длина словаря: " + str(len(self.__dictionary)))
+            #self.__natural_graph = Graph.createGraph(self.__dictionary, self.__document)
+           # print("Я закончил")
+            #np.set_printoptions(threshold=sys.maxsize, linewidth=sys.maxsize)
+            #print(self.__natural_graph)
+            # self.__textGeneration()
+            # self.__gen_graph = Graph.createGraph(self.__dictionary, self.__generated_text)
+            # self.saveGenText(name_text)
             self.__generated_text = []
+
+
+
+    def __textTokenize(self, rawtext):
+        morph = pm.MorphAnalyzer()
+        sent_struct = []
+        text_struct = []
+        word_feature = ''
+
+        text = list(sentenize(rawtext))
+        text = [_.text for _ in text]
+
+        for sent in range(len(text)):
+            text[sent] = list(tokenize(text[sent].lower()))
+            text[sent] = [_.text for _ in text[sent]]
+
+            #Создание структуры предложений
+            sent_struct = []
+            for word in text[sent]:
+                word_feature = morph.parse(word)[0]
+                if str(word_feature.tag) == 'PNCT':
+                    sent_struct.append(word_feature.word)
+                else:
+                    sent_struct.append(str(word_feature.tag))
+                    #Создание словаря
+                    if word_feature not in self.__dictionary:
+                        self.__dictionary.append(word_feature)
+            self.__text_structure.append(sent_struct)
+        return text
 
 
     def __textGeneration(self):
@@ -96,59 +125,20 @@ class Text:
         print('Сохранил сгенерированный текст!')
 
 
-class Partition:
-    @staticmethod
-    def textTokenize(text):
-        text_result = list(sentenize(text))
-        text_result = [_.text for _ in text_result]
-        for sentence in range(len(text_result)):
-            text_result[sentence] = list(tokenize(text_result[sentence].lower()))
-            text_result[sentence] = [_.text for _ in text_result[sentence]]
-        return text_result
 
 
-    @staticmethod
-    def createSentStruct(text):
-        morph = pm.MorphAnalyzer()
-        sent_struct = []
-        text_struct = []
-        word_feature = ''
+#class Partition:
+    #@staticmethod
 
-        for sent in range(len(text)):
-            sent_struct = []
-            for word in text[sent]:
-                word_feature = morph.parse(word)[0]
-                if str(word_feature.tag) == 'PNCT':
-                    sent_struct.append(word_feature.word)
-                else:
-                    sent_struct.append(str(word_feature.tag))
-            text_struct.append(sent_struct)
-
-        return text_struct
-
-
-    @staticmethod
-    def createDictionary(text):
-        dictionary = []
-        morph = pm.MorphAnalyzer()
-        punct = string.punctuation
-        punct += '—–...«»'
-        word_feature = ''
-
-        for sent in range(len(text)):
-            for word in text[sent]:
-                if word not in punct:
-                    word_feature = morph.parse(word)[0]
-                    if word_feature not in dictionary:
-                        dictionary.append(word_feature)
-
-        return dictionary
 
 
 class Statistics:
     def __init__(self):
         self.__word_count = {}
         self.__quantity_words = 0
+
+
+
 
 class Graph:
     @staticmethod
@@ -158,21 +148,34 @@ class Graph:
         punct += '—–...«»'
         graph = np.zeros((len(dictionary), len(dictionary)))
         for dict in range(len(dictionary)):
+            print(dict)
             for sent in range(len(text)):
-                for word in text[sent]:
-                    if word not in punct:
-                        word_index = Graph.findIndxWord(word, dictionary)
-                        if word_index != dict:
+                if Graph.findWordInSent(text[sent], dictionary[dict]):
+                    for word in text[sent]:
+                        if (word not in punct) and (word != dictionary[dict].word):
+                            word_index = Graph.findIndxWord(word, dictionary)
                             graph[dict][word_index] += 1
 
         return graph
 
+
+    @staticmethod
+    def findWordInSent(sent, dict_word):
+        result = 0
+        for word in sent:
+            if word == dict_word.word:
+                result = 1
+                break
+
+        return result
+
+
     @staticmethod
     def findIndxWord(word, dictionary):
         word_index = 0
-        for wrd_indx in range(len(dictionary)):
-            if dictionary[wrd_indx].word == word:
-                word_index = wrd_indx
+        for dict_word_index in range(len(dictionary)):
+            if dictionary[dict_word_index].word == word:
+                word_index = dict_word_index
                 break
 
         return word_index
