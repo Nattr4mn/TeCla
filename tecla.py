@@ -21,8 +21,6 @@ class Text:
         self.__generated_text = []
         self.__text_structure = []
         self.__dictionary = []
-        self.__natural_graph = []
-        self.__gen_graph = []
 
 
     def text(self):
@@ -36,13 +34,13 @@ class Text:
             self.__document = self.__tokenize(self.__document)
             self.__dictionary = self.__createDictionary(self.__document)
             print("Длина словаря натурального текста: " + str(len(self.__dictionary)))
-            self.__natural_graph = Graph.createGraph(self.__dictionary, self.__document)
-            np.set_printoptions(threshold=sys.maxsize, linewidth=sys.maxsize)
-            print(self.__natural_graph)
+            graph = Graph.createGraph(self.__dictionary, self.__document)
+            np.save("graphs\\nat_" + name_text, graph)
             self.__generation()
             self.__dictionary = self.__createDictionary(self.__generated_text)
             print("Длина словаря сген текста: " + str(len(self.__dictionary)))
-            #self.__gen_graph = Graph.createGraph(self.__dictionary, self.__generated_text)
+            graph = Graph.createGraph(self.__dictionary, self.__generated_text)
+            np.save("graphs\\gen_" + name_text, graph)
             self.__saveGenText(name_text)
             self.__generated_text = []
 
@@ -93,7 +91,6 @@ class Text:
         punct = string.punctuation
         punct += '—–...«»'
         for sent in range(len(self.__text_structure)):
-            print('Генерирую предложение ' + str(sent + 1))
             for word in self.__text_structure[sent]:
                 if word not in punct:
                     word_list = self.__findWords(word)
@@ -150,8 +147,6 @@ class Graph:
         morph = pm.MorphAnalyzer()
         punct = string.punctuation
         punct += '—–...«»'
-        for dict in range(len(dictionary)):
-            print(str(dict) + ": " + dictionary[dict].word)
         graph = np.zeros((len(dictionary), len(dictionary)))
         for dict in range(len(dictionary)):
             for sent in range(len(text)):
@@ -161,7 +156,6 @@ class Graph:
                         if (word not in punct) and (word != dictionary[dict].word):
                             word_index = Graph.findIndxWord(word, dictionary)
                             graph[dict][word_index] += 1
-
 
         return graph
 
