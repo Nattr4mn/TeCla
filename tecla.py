@@ -153,27 +153,30 @@ class Statistics:
         self.__maxDmx = np.max(self.__dMx)
         self.__meanDmx = np.mean(self.__dMx)
         self.__medianDmx = self.__median(self.__dMx)
+        self.__stdDmx = self.__std(self.__dMx, self.__meanDmx)
         print('\ndegMx')
         print(self.__dMx)
-        print('Max: ' + str(self.__maxDmx) + '. Mean: ' + str(self.__meanDmx) + '. Median: ' + str(self.__medianDmx))
+        print('Max: ' + str(self.__maxDmx) + '. Mean: ' + str(self.__meanDmx) + '. Median: ' + str(self.__medianDmx) + '. Std: ' + str(self.__stdDmx))
 
         # degMn
         self.__dMn = self.__createDegMn(graph)
         self.__maxDmn = np.max(self.__dMn)
         self.__meanDmn = np.mean(self.__dMn)
         self.__medianDmn = self.__median(self.__dMn)
+        self.__stdDmn = self.__std(self.__dMn, self.__meanDmn)
         print('\ndegMn')
         print(self.__dMn)
-        print('Max: ' + str(self.__maxDmn) + '. Mean: ' + str(self.__meanDmn) + '. Median: ' + str(self.__medianDmn))
+        print('Max: ' + str(self.__maxDmn) + '. Mean: ' + str(self.__meanDmn) + '. Median: ' + str(self.__medianDmn) + '. Std: ' + str(self.__stdDmn))
 
         # degMdn
         self.__dMdn = self.__createDegMx(graph)
         self.__maxDmdn = np.max(self.__dMdn)
         self.__meanDmdn = np.mean(self.__dMdn)
         self.__medianDmdn = self.__median(self.__dMdn)
+        self.__stdDmdn = self.__std(self.__dMdn, self.__meanDmdn)
         print('\ndegMdn')
         print(self.__dMdn)
-        print('Max: ' + str(self.__maxDmdn) + '. Mean: ' + str(self.__meanDmdn) + '. Median: ' + str(self.__medianDmdn))
+        print('Max: ' + str(self.__maxDmdn) + '. Mean: ' + str(self.__meanDmdn) + '. Median: ' + str(self.__medianDmdn) + '. Std: ' + str(self.__stdDmdn))
 
         # theta
         self.__theta = self.__createTheta(graph)
@@ -189,9 +192,10 @@ class Statistics:
         self.__maxThetaS = np.max(self.__thetaS)
         self.__meanThetaS = np.mean(self.__thetaS)
         self.__medianThetaS = self.__median(self.__thetaS)
+        self.__stdThetaS = self.__std(self.__thetaS, self.__meanThetaS)
         print("\nthetaS")
         print(self.__thetaS)
-        print('Max: ' + str(self.__maxThetaS) + '. Mean: ' + str(self.__meanThetaS) + '. Median: ' + str(self.__medianThetaS))
+        print('Max: ' + str(self.__maxThetaS) + '. Mean: ' + str(self.__meanThetaS) + '. Median: ' + str(self.__medianThetaS) + '. Std: ' + str(self.__stdThetaS))
 
 
     def __createDeg(self, graph):
@@ -249,7 +253,6 @@ class Statistics:
 
     def __median(self, selection):
         median = 0
-        selection.sort()
         if len(selection) % 2 == 0:
             n = int(len(selection) / 2)
             n1 = int(len(selection) / 2) + 1
