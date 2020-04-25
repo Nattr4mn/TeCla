@@ -20,8 +20,8 @@ class Text:
         self.__encod = ""
         self.__document = []
         self.__generated_text = []
-        self.__text_structure = []
         self.__dictionary = []
+        self.__gen_dictionary = []
 
 
     def text(self):
@@ -33,14 +33,16 @@ class Text:
                 self.__document = text.read()
 
             self.__document = self.__tokenize(self.__document)
-            self.__dictionary = self.__createDictionary(self.__document)
+            print('Длина текста: ' + str(len(self.__document)))
+            print('Длина словаря натурального текста: ' + str(len(self.__dictionary)))
             graph = Graph.createGraph(self.__dictionary, self.__document)
             statistics = Statistics(graph, len(self.__document))
             graph = []
 
-            self.__generation()
-            self.__dictionary = self.__createDictionary(self.__generated_text)
+            print('Длина словаря сгенерированного текста: ' + str(len(self.__gen_dictionary)))
             graph = Graph.createGraph(self.__dictionary, self.__generated_text)
+            statistics = Statistics(graph, len(self.__generated_text))
+            graph = []
             self.__saveGenText(name_text)
             self.__generated_text = []
 
@@ -50,7 +52,11 @@ class Text:
         morph = pm.MorphAnalyzer()
         sent_struct = []
         text_struct = []
+        punct = string.punctuation
+        punct += '—–...«»'
         word_feature = ''
+        dict_for_gen = []
+        text_structure = []
 
         text = list(sentenize(rawtext))
         text = [_.text for _ in text]
@@ -68,50 +74,55 @@ class Text:
                 else:
                     sent_struct.append(str(word_feature.tag))
 
-            self.__text_structure.append(sent_struct)
+                dict_for_gen.append(word_feature)
+                if (word not in punct) and (word not in self.__dictionary):
+                    self.__dictionary.append(word)
+            text_structure.append(sent_struct)
+
+        self.__generation(text_structure, dict_for_gen)
         return text
 
 
-    def __createDictionary(self, text):
-        punct = string.punctuation
-        punct += '—–...«»'
-        morph = pm.MorphAnalyzer()
-        dict = []
-        for sent in range(len(text)):
-            for word in text[sent]:
-                if word not in punct:
-                    word_feature = morph.parse(word)[0]
-                    if word_feature not in dict:
-                        dict.append(word_feature)
-        return dict
-
-
-    def __generation(self):
+    def __generation(self, text_structure, dictionary):
         generated_sent = []
         punct = string.punctuation
         punct += '—–...«»'
-        for sent in range(len(self.__text_structure)):
-            for word in self.__text_structure[sent]:
+        for sent in range(len(text_structure)):
+            for word in text_structure[sent]:
                 if word not in punct:
-                    word_list = self.__findWords(word)
+                    word_list = self.__findWords(word, dictionary)
                     if len(word_list) != 0:
-                        generated_sent.append(word_list[random.randint(0, len(word_list) - 1)])
+                        indx = random.randint(0, len(word_list) - 1)
+                        if word_list[indx] not in self.__gen_dictionary:
+                            self.__gen_dictionary.append(word_list[indx])
+                        generated_sent.append(word_list[indx])
                 else:
                     generated_sent.append(word)
             self.__generated_text.append(generated_sent)
             generated_sent = []
 
 
-    def __findWords(self, morph_param):
+    def __findWords(self, morph_param, dictionary):
         result = []
         start = 0
-        end = len(self.__dictionary)
+        end = len(dictionary)
 
-        for word in self.__dictionary:
+        for word in dictionary:
             if str(word[1]) == morph_param:
                 result.append(word[0])
 
         return result
+
+
+    def __createDictionary(self, text):
+        punct = string.punctuation
+        punct += '—–...«»'
+        dictionary = []
+        for sent in range(len(text)):
+            for word in text[sent]:
+                if (word not in punct) and (word not in dictionary):
+                    dictionary.append(word)
+        return dictionary
 
 
     def __encodingDefinition(self, file):
@@ -135,6 +146,7 @@ class Text:
         print('Сохранил сгенерированный текст!')
 
 
+
 class Statistics:
     def __init__(self, graph, quantitySent):
         np.set_printoptions(threshold=sys.maxsize)
@@ -144,8 +156,7 @@ class Statistics:
         self.__maxD = np.max(self.__d)
         self.__meanD = np.mean(self.__d)
         self.__medianD = self.__median(self.__d)
-        print('\ndeg')
-        print(self.__d)
+        print('deg')
         print('Max: ' + str(self.__maxD) + '. Mean: ' + str(self.__meanD) + '. Median: ' + str(self.__medianD))
 
         # degMx
@@ -153,35 +164,34 @@ class Statistics:
         self.__maxDmx = np.max(self.__dMx)
         self.__meanDmx = np.mean(self.__dMx)
         self.__medianDmx = self.__median(self.__dMx)
-        print('\ndegMx')
-        print(self.__dMx)
-        print('Max: ' + str(self.__maxDmx) + '. Mean: ' + str(self.__meanDmx) + '. Median: ' + str(self.__medianDmx))
+        self.__stdDmx = 0 # self.__std(self.__dMx, self.__meanDmx)
+        print('degMx')
+        print('Max: ' + str(self.__maxDmx) + '. Mean: ' + str(self.__meanDmx) + '. Median: ' + str(self.__medianDmx) + '. Std: ' + str(self.__stdDmx))
 
         # degMn
         self.__dMn = self.__createDegMn(graph)
         self.__maxDmn = np.max(self.__dMn)
         self.__meanDmn = np.mean(self.__dMn)
         self.__medianDmn = self.__median(self.__dMn)
-        print('\ndegMn')
-        print(self.__dMn)
-        print('Max: ' + str(self.__maxDmn) + '. Mean: ' + str(self.__meanDmn) + '. Median: ' + str(self.__medianDmn))
+        self.__stdDmn = 0 # self.__std(self.__dMn, self.__meanDmn)
+        print('degMn')
+        print('Max: ' + str(self.__maxDmn) + '. Mean: ' + str(self.__meanDmn) + '. Median: ' + str(self.__medianDmn) + '. Std: ' + str(self.__stdDmn))
 
         # degMdn
         self.__dMdn = self.__createDegMx(graph)
         self.__maxDmdn = np.max(self.__dMdn)
         self.__meanDmdn = np.mean(self.__dMdn)
         self.__medianDmdn = self.__median(self.__dMdn)
-        print('\ndegMdn')
-        print(self.__dMdn)
-        print('Max: ' + str(self.__maxDmdn) + '. Mean: ' + str(self.__meanDmdn) + '. Median: ' + str(self.__medianDmdn))
+        self.__stdDmdn = 0 # self.__std(self.__dMdn, self.__meanDmdn)
+        print('degMdn')
+        print('Max: ' + str(self.__maxDmdn) + '. Mean: ' + str(self.__meanDmdn) + '. Median: ' + str(self.__medianDmdn) + '. Std: ' + str(self.__stdDmdn))
 
         # theta
         self.__theta = self.__createTheta(graph)
         self.__maxTheta = np.max(self.__theta)
         self.__meanTheta = np.mean(self.__theta)
         self.__medianTheta = self.__median(self.__theta)
-        print("\ntheta")
-        print(self.__theta)
+        print("theta")
         print('Max: ' + str(self.__maxTheta) + '. Mean: ' + str(self.__meanTheta) + '. Median: ' + str(self.__medianTheta))
 
         # thetaS
@@ -189,9 +199,10 @@ class Statistics:
         self.__maxThetaS = np.max(self.__thetaS)
         self.__meanThetaS = np.mean(self.__thetaS)
         self.__medianThetaS = self.__median(self.__thetaS)
-        print("\nthetaS")
-        print(self.__thetaS)
-        print('Max: ' + str(self.__maxThetaS) + '. Mean: ' + str(self.__meanThetaS) + '. Median: ' + str(self.__medianThetaS))
+        self.__stdThetaS = 0 # self.__std(self.__thetaS, self.__meanThetaS)
+        print("thetaS")
+        print('Max: ' + str(self.__maxThetaS) + '. Mean: ' + str(self.__meanThetaS) + '. Median: ' + str(self.__medianThetaS) + '. Std: ' + str(self.__stdThetaS))
+        print('_______________________________________________________________________________________________________________________')
 
 
     def __createDeg(self, graph):
@@ -230,9 +241,9 @@ class Statistics:
 
     def __createTheta(self, graph):
         theta = np.array([value for value in graph[0]])
-        for i in range(1, len(graph)):
-            for value in graph[i]:
-                theta = np.append(theta, value)
+        for i in range(1, len(graph) - 1):
+            for j in range(i + 1, len(graph[i])):
+                theta = np.append(theta, graph[i][j])
         theta.sort()
         return theta
 
@@ -249,7 +260,6 @@ class Statistics:
 
     def __median(self, selection):
         median = 0
-        selection.sort()
         if len(selection) % 2 == 0:
             n = int(len(selection) / 2)
             n1 = int(len(selection) / 2) + 1
@@ -265,7 +275,7 @@ class Statistics:
         n = len(selection)
         for x in selection:
             std += (x - mean)
-        std = math.sqrt(1/n * std)
+        std = math.sqrt((1/n * std))
         return std
 
 
@@ -277,14 +287,17 @@ class Graph:
         punct = string.punctuation
         punct += '—–...«»'
         graph = np.zeros((len(dictionary), len(dictionary)))
+
         for dict in range(len(dictionary)):
-            for sent in range(len(text)):
-                if Graph.findWordInSent(text[sent], dictionary[dict]):
-                    words = set(word for word in text[sent])
-                    for word in words:
-                        if (word not in punct) and (word != dictionary[dict].word):
+            for sentence in text:
+                if Graph.findWordInSent(sentence, dictionary[dict]):
+                    words = []
+                    for word in sentence:
+                        if (word not in punct) and (word not in words) and (word != dictionary[dict]):
                             word_index = Graph.findIndxWord(word, dictionary)
                             graph[dict][word_index] += 1
+                        words.append(word)
+
         return graph
 
 
@@ -292,7 +305,7 @@ class Graph:
     def findWordInSent(sent, dict_word):
         result = 0
         for word in sent:
-            if word == dict_word.word:
+            if word == dict_word:
                 result = 1
                 break
         return result
@@ -303,7 +316,8 @@ class Graph:
         word_index = 0
 
         for dict_word_index in range(len(dictionary)):
-            if dictionary[dict_word_index].word == word:
+            if dictionary[dict_word_index] == word:
                 word_index = dict_word_index
                 break
+
         return word_index
