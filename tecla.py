@@ -10,6 +10,9 @@ import random
 import os, sys
 import csv
 import math
+import time
+import matplotlib.pyplot as plt
+import matplotlib.gridspec as gridspec
 
 
 class Text:
@@ -22,6 +25,11 @@ class Text:
         self.__generated_text = []
         self.__dictionary = []
         self.__gen_dictionary = []
+        self.natural_statistics = 0
+        self.gen_statistics = 0
+        self.plot1 = np.zeros(22)        #Значения для графика A > B
+        self.plot2 = np.zeros(22)        #Значения для графика A = B
+        self.plot3 = np.zeros(22)        #Значения для графика A < B
 
 
     def text(self):
@@ -35,17 +43,40 @@ class Text:
             self.__document = self.__tokenize(self.__document)
             print('Длина текста: ' + str(len(self.__document)))
             print('Длина словаря натурального текста: ' + str(len(self.__dictionary)))
+
+            start_time = time.time()
             graph = Graph.createGraph(self.__dictionary, self.__document)
-            statistics = Statistics(graph, len(self.__document))
+            print('Время создания графа для натурального текста: ' + f"{(time.time() - start_time)/60} минут")
+
+            start_time = time.time()
+            self.natural_statistics = Statistics(graph, len(self.__document))
+            print('Время подсчета статистик для натурального текста: ' + f"{(time.time() - start_time)/60} минут")
+
             graph = []
 
             print('Длина словаря сгенерированного текста: ' + str(len(self.__gen_dictionary)))
+
+            start_time = time.time()
             graph = Graph.createGraph(self.__dictionary, self.__generated_text)
-            statistics = Statistics(graph, len(self.__generated_text))
+            print('Время создания графа для сгенерированного текста: ' + f"{(time.time() - start_time)/60} минут")
+
+            start_time = time.time()
+            self.gen_statistics = Statistics(graph, len(self.__generated_text))
+            print('Время подсчета статистик для сгенерированного текста: ' + f"{(time.time() - start_time)/60} минут")
+
+            self.__statisticsComp()
+
             graph = []
             self.__saveGenText(name_text)
             self.__generated_text = []
+            self.__dictionary = []
+            self.__gen_dictionary = []
 
+        quantityTexts = len(self.__file_list)
+        self.plot1 = self.plot1 / quantityTexts
+        self.plot2 = self.plot2 / quantityTexts
+        self.plot3 = self.plot3 / quantityTexts
+        self.__createPlots()
 
 
     def __tokenize(self, rawtext):
@@ -53,7 +84,7 @@ class Text:
         sent_struct = []
         text_struct = []
         punct = string.punctuation
-        punct += '—–...«»'
+        punct += '—–...«»***\n '
         word_feature = ''
         dict_for_gen = []
         text_structure = []
@@ -79,7 +110,9 @@ class Text:
                     self.__dictionary.append(word)
             text_structure.append(sent_struct)
 
+        start_time = time.time()
         self.__generation(text_structure, dict_for_gen)
+        print('Время генерации текста: ' + f"{(time.time() - start_time)/60} минут")
         return text
 
 
@@ -114,6 +147,154 @@ class Text:
         return result
 
 
+    def __dataPlot(self, A, B, index):
+        if A > B:
+            self.plot1[index] += 1
+        if A == B:
+            self.plot2[index] += 1
+        if A < B:
+            self.plot3[index] += 1
+
+
+    def __createPlots(self):
+        x = ['max(d)', 'mean(d)', 'median(d)',
+             'max(Dmx)', 'mean(Dmx)', 'median(Dmx)', 'std(Dmx)',
+             'max(Dmn)', 'mean(Dmn)', 'median(Dmn)', 'std(Dmn)',
+             'max(Dmdn)', 'mean(Dmdn)', 'median(Dmdn)', 'std(Dmdn)',
+             'max(theta)', 'mean(theta)', 'median(theta)',
+             'max(thetaS)', 'mean(thetaS)', 'median(thetaS)', 'std(thetaS)'
+            ]
+        plt.figure(figsize=(22, 10), dpi=100)
+        plt.plot(x, self.plot1, '--', color = '#008000', marker='>', label='A > B')
+        plt.plot(x, self.plot2, '-', color = '#000000', marker='s', label='A = B')
+        plt.plot(x, self.plot3, '-.', color = '#FF0000', marker='<', label='A < B')
+        plt.title('A - список значений для исходного текста\nB - список значений для сгенерированного текста', fontsize=11, loc='left')
+        plt.xlabel('Статистики')
+        plt.ylabel('Значения')
+        plt.legend()
+        plt.grid()
+        plt.savefig('main_plot')
+
+
+    def __statisticsComp(self):
+        # deg
+        # 0
+        A = self.natural_statistics.maxD
+        B = self.gen_statistics.maxD
+        self.__dataPlot(A, B, 0)
+
+        # 1
+        A = self.natural_statistics.meanD
+        B = self.gen_statistics.meanD
+        self.__dataPlot(A, B, 1)
+
+        # 2
+        A = self.natural_statistics.medianD
+        B = self.gen_statistics.medianD
+        self.__dataPlot(A, B, 2)
+
+        # degMx
+        # 3
+        A = self.natural_statistics.maxDmx
+        B = self.gen_statistics.maxDmx
+        self.__dataPlot(A, B, 3)
+
+        # 4
+        A = self.natural_statistics.meanDmx
+        B = self.gen_statistics.meanDmx
+        self.__dataPlot(A, B, 4)
+
+        # 5
+        A = self.natural_statistics.medianDmx
+        B = self.gen_statistics.medianDmx
+        self.__dataPlot(A, B, 5)
+
+        # 6
+        A = self.natural_statistics.stdDmx
+        B = self.gen_statistics.stdDmx
+        self.__dataPlot(A, B, 6)
+
+        # degMn
+        # 7
+        A = self.natural_statistics.maxDmn
+        B = self.gen_statistics.maxDmn
+        self.__dataPlot(A, B, 7)
+
+        # 8
+        A = self.natural_statistics.meanDmn
+        B = self.gen_statistics.meanDmn
+        self.__dataPlot(A, B, 8)
+
+        # 9
+        A = self.natural_statistics.medianDmn
+        B = self.gen_statistics.medianDmn
+        self.__dataPlot(A, B, 9)
+
+        # 10
+        A = self.natural_statistics.stdDmn
+        B = self.gen_statistics.stdDmn
+        self.__dataPlot(A, B, 10)
+
+
+        # degMdn
+        # 11
+        A = self.natural_statistics.maxDmdn
+        B = self.gen_statistics.maxDmdn
+        self.__dataPlot(A, B, 11)
+
+        # 12
+        A = self.natural_statistics.meanDmdn
+        B = self.gen_statistics.meanDmdn
+        self.__dataPlot(A, B, 12)
+
+        # 13
+        A = self.natural_statistics.medianDmdn
+        B = self.gen_statistics.medianDmdn
+        self.__dataPlot(A, B, 13)
+
+        # 14
+        A = self.natural_statistics.stdDmdn
+        B = self.gen_statistics.stdDmdn
+        self.__dataPlot(A, B, 14)
+
+        # theta
+        # 15
+        A = self.natural_statistics.maxTheta
+        B = self.gen_statistics.maxTheta
+        self.__dataPlot(A, B, 15)
+
+        # 16
+        A = self.natural_statistics.meanTheta
+        B = self.gen_statistics.meanTheta
+        self.__dataPlot(A, B, 16)
+
+        # 17
+        A = self.natural_statistics.medianTheta
+        B = self.gen_statistics.medianTheta
+        self.__dataPlot(A, B, 17)
+
+        # thetaS
+        # 18
+        A = self.natural_statistics.maxThetaS
+        B = self.gen_statistics.maxThetaS
+        self.__dataPlot(A, B, 18)
+
+        # 19
+        A = self.natural_statistics.meanThetaS
+        B = self.gen_statistics.meanThetaS
+        self.__dataPlot(A, B, 19)
+
+        # 20
+        A = self.natural_statistics.medianThetaS
+        B = self.gen_statistics.medianThetaS
+        self.__dataPlot(A, B, 20)
+
+        # 21
+        A = self.natural_statistics.stdThetaS
+        B = self.gen_statistics.stdThetaS
+        self.__dataPlot(A, B, 21)
+
+
     def __createDictionary(self, text):
         punct = string.punctuation
         punct += '—–...«»'
@@ -140,7 +321,7 @@ class Text:
         for sent in range(len(self.__generated_text)):
             for word in self.__generated_text[sent]:
                 save_text += word + ' '
-        f = open('gen_' + title + '.txt', 'w', encoding=self.__encod)
+        f = open('generated/gen_' + title, 'w', encoding=self.__encod)
         f.write(save_text)
         f.close()
         print('Сохранил сгенерированный текст!')
@@ -152,56 +333,56 @@ class Statistics:
         np.set_printoptions(threshold=sys.maxsize)
         self.__quantitySent = quantitySent
         # deg
-        self.__d = self.__createDeg(graph)
-        self.__maxD = np.max(self.__d)
-        self.__meanD = np.mean(self.__d)
-        self.__medianD = self.__median(self.__d)
+        self.d = self.__createDeg(graph)
+        self.maxD = np.max(self.d)
+        self.meanD = np.mean(self.d)
+        self.medianD = self.__median(self.d)
         print('deg')
-        print('Max: ' + str(self.__maxD) + '. Mean: ' + str(self.__meanD) + '. Median: ' + str(self.__medianD))
+        print('Max: ' + str(self.maxD) + '. Mean: ' + str(self.meanD) + '. Median: ' + str(self.medianD))
 
         # degMx
-        self.__dMx = self.__createDegMx(graph)
-        self.__maxDmx = np.max(self.__dMx)
-        self.__meanDmx = np.mean(self.__dMx)
-        self.__medianDmx = self.__median(self.__dMx)
-        self.__stdDmx = 0 # self.__std(self.__dMx, self.__meanDmx)
+        self.dMx = self.__createDegMx(graph)
+        self.maxDmx = np.max(self.dMx)
+        self.meanDmx = np.mean(self.dMx)
+        self.medianDmx = self.__median(self.dMx)
+        self.stdDmx = self.__std(self.dMx, self.meanDmx)
         print('degMx')
-        print('Max: ' + str(self.__maxDmx) + '. Mean: ' + str(self.__meanDmx) + '. Median: ' + str(self.__medianDmx) + '. Std: ' + str(self.__stdDmx))
+        print('Max: ' + str(self.maxDmx) + '. Mean: ' + str(self.meanDmx) + '. Median: ' + str(self.medianDmx) + '. Std: ' + str(self.stdDmx))
 
         # degMn
-        self.__dMn = self.__createDegMn(graph)
-        self.__maxDmn = np.max(self.__dMn)
-        self.__meanDmn = np.mean(self.__dMn)
-        self.__medianDmn = self.__median(self.__dMn)
-        self.__stdDmn = 0 # self.__std(self.__dMn, self.__meanDmn)
+        self.dMn = self.__createDegMn(graph)
+        self.maxDmn = np.max(self.dMn)
+        self.meanDmn = np.mean(self.dMn)
+        self.medianDmn = self.__median(self.dMn)
+        self.stdDmn = self.__std(self.dMn, self.meanDmn)
         print('degMn')
-        print('Max: ' + str(self.__maxDmn) + '. Mean: ' + str(self.__meanDmn) + '. Median: ' + str(self.__medianDmn) + '. Std: ' + str(self.__stdDmn))
+        print('Max: ' + str(self.maxDmn) + '. Mean: ' + str(self.meanDmn) + '. Median: ' + str(self.medianDmn) + '. Std: ' + str(self.stdDmn))
 
         # degMdn
-        self.__dMdn = self.__createDegMx(graph)
-        self.__maxDmdn = np.max(self.__dMdn)
-        self.__meanDmdn = np.mean(self.__dMdn)
-        self.__medianDmdn = self.__median(self.__dMdn)
-        self.__stdDmdn = 0 # self.__std(self.__dMdn, self.__meanDmdn)
+        self.dMdn = self.__createDegMx(graph)
+        self.maxDmdn = np.max(self.dMdn)
+        self.meanDmdn = np.mean(self.dMdn)
+        self.medianDmdn = self.__median(self.dMdn)
+        self.stdDmdn = self.__std(self.dMdn, self.meanDmdn)
         print('degMdn')
-        print('Max: ' + str(self.__maxDmdn) + '. Mean: ' + str(self.__meanDmdn) + '. Median: ' + str(self.__medianDmdn) + '. Std: ' + str(self.__stdDmdn))
+        print('Max: ' + str(self.maxDmdn) + '. Mean: ' + str(self.meanDmdn) + '. Median: ' + str(self.medianDmdn) + '. Std: ' + str(self.stdDmdn))
 
         # theta
-        self.__theta = self.__createTheta(graph)
-        self.__maxTheta = np.max(self.__theta)
-        self.__meanTheta = np.mean(self.__theta)
-        self.__medianTheta = self.__median(self.__theta)
+        self.theta = self.__createTheta(graph)
+        self.maxTheta = np.max(self.theta)
+        self.meanTheta = np.mean(self.theta)
+        self.medianTheta = self.__median(self.theta)
         print("theta")
-        print('Max: ' + str(self.__maxTheta) + '. Mean: ' + str(self.__meanTheta) + '. Median: ' + str(self.__medianTheta))
+        print('Max: ' + str(self.maxTheta) + '. Mean: ' + str(self.meanTheta) + '. Median: ' + str(self.medianTheta))
 
         # thetaS
-        self.__thetaS = self.__createThetaS()
-        self.__maxThetaS = np.max(self.__thetaS)
-        self.__meanThetaS = np.mean(self.__thetaS)
-        self.__medianThetaS = self.__median(self.__thetaS)
-        self.__stdThetaS = 0 # self.__std(self.__thetaS, self.__meanThetaS)
+        self.thetaS = self.__createThetaS()
+        self.maxThetaS = np.max(self.thetaS)
+        self.meanThetaS = np.mean(self.thetaS)
+        self.medianThetaS = self.__median(self.thetaS)
+        self.stdThetaS = self.__std(self.thetaS, self.meanThetaS)
         print("thetaS")
-        print('Max: ' + str(self.__maxThetaS) + '. Mean: ' + str(self.__meanThetaS) + '. Median: ' + str(self.__medianThetaS) + '. Std: ' + str(self.__stdThetaS))
+        print('Max: ' + str(self.maxThetaS) + '. Mean: ' + str(self.meanThetaS) + '. Median: ' + str(self.medianThetaS) + '. Std: ' + str(self.stdThetaS))
         print('_______________________________________________________________________________________________________________________')
 
 
@@ -249,8 +430,8 @@ class Statistics:
 
 
     def __createThetaS(self):
-        thetaS = np.zeros((len(self.__theta)))
-        theta = self.__theta
+        thetaS = np.zeros((len(self.theta)))
+        theta = self.theta
         quantitySent = self.__quantitySent
         for i in range(len(theta)):
             thetaS[i] = (theta[i] / quantitySent)
@@ -274,7 +455,7 @@ class Statistics:
         std = 0
         n = len(selection)
         for x in selection:
-            std += (x - mean)
+            std += (x - mean) * (x - mean)
         std = math.sqrt((1/n * std))
         return std
 
