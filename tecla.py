@@ -39,38 +39,38 @@ class Text:
             self.__encod = self.__encodingDefinition(file)
             with open(file, encoding = self.__encod) as text:
                 self.__document = text.read()
+            if len(self.__document) > 100:
+                self.__document = self.__tokenize(self.__document)
+                print('Длина текста: ' + str(len(self.__document)))
+                print('Длина словаря натурального текста: ' + str(len(self.__dictionary)))
 
-            self.__document = self.__tokenize(self.__document)
-            print('Длина текста: ' + str(len(self.__document)))
-            print('Длина словаря натурального текста: ' + str(len(self.__dictionary)))
+                start_time = time.time()
+                graph = Graph.createGraph(self.__dictionary, self.__document)
+                print('Время создания графа для натурального текста: ' + f"{(time.time() - start_time)/60} минут")
 
-            start_time = time.time()
-            graph = Graph.createGraph(self.__dictionary, self.__document)
-            print('Время создания графа для натурального текста: ' + f"{(time.time() - start_time)/60} минут")
+                start_time = time.time()
+                self.natural_statistics = Statistics(graph, len(self.__document))
+                print('Время подсчета статистик для натурального текста: ' + f"{(time.time() - start_time)/60} минут")
 
-            start_time = time.time()
-            self.natural_statistics = Statistics(graph, len(self.__document))
-            print('Время подсчета статистик для натурального текста: ' + f"{(time.time() - start_time)/60} минут")
+                graph = []
 
-            graph = []
+                print('Длина словаря сгенерированного текста: ' + str(len(self.__gen_dictionary)))
 
-            print('Длина словаря сгенерированного текста: ' + str(len(self.__gen_dictionary)))
+                start_time = time.time()
+                graph = Graph.createGraph(self.__dictionary, self.__generated_text)
+                print('Время создания графа для сгенерированного текста: ' + f"{(time.time() - start_time)/60} минут")
 
-            start_time = time.time()
-            graph = Graph.createGraph(self.__dictionary, self.__generated_text)
-            print('Время создания графа для сгенерированного текста: ' + f"{(time.time() - start_time)/60} минут")
+                start_time = time.time()
+                self.gen_statistics = Statistics(graph, len(self.__generated_text))
+                print('Время подсчета статистик для сгенерированного текста: ' + f"{(time.time() - start_time)/60} минут")
 
-            start_time = time.time()
-            self.gen_statistics = Statistics(graph, len(self.__generated_text))
-            print('Время подсчета статистик для сгенерированного текста: ' + f"{(time.time() - start_time)/60} минут")
+                self.__statisticsComp()
 
-            self.__statisticsComp()
-
-            graph = []
-            self.__saveGenText(name_text)
-            self.__generated_text = []
-            self.__dictionary = []
-            self.__gen_dictionary = []
+                graph = []
+                self.__saveGenText(name_text)
+                self.__generated_text = []
+                self.__dictionary = []
+                self.__gen_dictionary = []
 
         quantityTexts = len(self.__file_list)
         self.plot1 = self.plot1 / quantityTexts
@@ -82,7 +82,6 @@ class Text:
     def __tokenize(self, rawtext):
         morph = pm.MorphAnalyzer()
         sent_struct = []
-        text_struct = []
         punct = string.punctuation
         punct += '—–...«»***\n '
         word_feature = ''
@@ -105,9 +104,9 @@ class Text:
                 else:
                     sent_struct.append(str(word_feature.tag))
 
-                dict_for_gen.append(word_feature)
                 if (word not in punct) and (word not in self.__dictionary):
                     self.__dictionary.append(word)
+                    dict_for_gen.append(str(word_feature.tag))
             text_structure.append(sent_struct)
 
         start_time = time.time()
@@ -120,6 +119,7 @@ class Text:
         generated_sent = []
         punct = string.punctuation
         punct += '—–...«»'
+
         for sent in range(len(text_structure)):
             for word in text_structure[sent]:
                 if word not in punct:
@@ -137,13 +137,9 @@ class Text:
 
     def __findWords(self, morph_param, dictionary):
         result = []
-        start = 0
-        end = len(dictionary)
-
-        for word in dictionary:
-            if str(word[1]) == morph_param:
-                result.append(word[0])
-
+        for i in range(len(dictionary)):
+            if dictionary[i] == morph_param:
+                result.append(self.__dictionary[i])
         return result
 
 
@@ -423,8 +419,7 @@ class Statistics:
     def __createTheta(self, graph):
         theta = np.array([value for value in graph[0]])
         for i in range(1, len(graph) - 1):
-            for j in range(i + 1, len(graph[i])):
-                theta = np.append(theta, graph[i][j])
+            theta = np.append(theta, graph[i][i+1:])
         theta.sort()
         return theta
 
