@@ -39,7 +39,12 @@ class Text:
             self.__encod = self.__encodingDefinition(file)
             with open(file, encoding = self.__encod) as text:
                 self.__document = text.read()
+            if len(self.__document) > 100:
+                self.__document = self.__tokenize(self.__document)
+                print('Длина текста: ' + str(len(self.__document)))
+                print('Длина словаря натурального текста: ' + str(len(self.__dictionary)))
 
+<<<<<<< Edits
             self.__document = self.__tokenize(self.__document)
             print('Длина текста: ' + str(len(self.__document)))
             print('Длина словаря натурального текста: ' + str(len(self.__dictionary)))
@@ -72,6 +77,36 @@ class Text:
             self.__dictionary = []
             self.__gen_dictionary = []
 
+=======
+                start_time = time.time()
+                graph = Graph.createGraph(self.__dictionary, self.__document)
+                print('Время создания графа для натурального текста: ' + f"{(time.time() - start_time)/60} минут")
+
+                start_time = time.time()
+                self.natural_statistics = Statistics(graph, len(self.__document))
+                print('Время подсчета статистик для натурального текста: ' + f"{(time.time() - start_time)/60} минут")
+
+                graph = []
+
+                print('Длина словаря сгенерированного текста: ' + str(len(self.__gen_dictionary)))
+
+                start_time = time.time()
+                graph = Graph.createGraph(self.__dictionary, self.__generated_text)
+                print('Время создания графа для сгенерированного текста: ' + f"{(time.time() - start_time)/60} минут")
+
+                start_time = time.time()
+                self.gen_statistics = Statistics(graph, len(self.__generated_text))
+                print('Время подсчета статистик для сгенерированного текста: ' + f"{(time.time() - start_time)/60} минут")
+
+                self.__statisticsComp()
+
+                graph = []
+                self.__saveGenText(name_text)
+                self.__generated_text = []
+                self.__dictionary = []
+                self.__gen_dictionary = []
+
+>>>>>>> master
         quantityTexts = len(self.__file_list)
         self.plot1 = self.plot1 / quantityTexts
         self.plot2 = self.plot2 / quantityTexts
@@ -82,7 +117,10 @@ class Text:
     def __tokenize(self, rawtext):
         morph = pm.MorphAnalyzer()
         sent_struct = []
+<<<<<<< Edits
         text_struct = []
+=======
+>>>>>>> master
         punct = string.punctuation
         punct += '—–...«»***\n '
         word_feature = ''
@@ -105,9 +143,15 @@ class Text:
                 else:
                     sent_struct.append(str(word_feature.tag))
 
+<<<<<<< Edits
                 dict_for_gen.append(word_feature)
                 if (word not in punct) and (word not in self.__dictionary):
                     self.__dictionary.append(word)
+=======
+                if (word not in punct) and (word not in self.__dictionary):
+                    self.__dictionary.append(word)
+                    dict_for_gen.append(str(word_feature.tag))
+>>>>>>> master
             text_structure.append(sent_struct)
 
         start_time = time.time()
@@ -120,6 +164,10 @@ class Text:
         generated_sent = []
         punct = string.punctuation
         punct += '—–...«»'
+<<<<<<< Edits
+=======
+
+>>>>>>> master
         for sent in range(len(text_structure)):
             for word in text_structure[sent]:
                 if word not in punct:
@@ -137,14 +185,178 @@ class Text:
 
     def __findWords(self, morph_param, dictionary):
         result = []
+<<<<<<< Edits
         start = 0
         end = len(dictionary)
 
         for word in dictionary:
             if str(word[1]) == morph_param:
                 result.append(word[0])
-
+=======
+        for i in range(len(dictionary)):
+            if dictionary[i] == morph_param:
+                result.append(self.__dictionary[i])
         return result
+
+>>>>>>> master
+
+    def __dataPlot(self, A, B, index):
+        if A > B:
+            self.plot1[index] += 1
+        if A == B:
+            self.plot2[index] += 1
+        if A < B:
+            self.plot3[index] += 1
+
+
+    def __createPlots(self):
+        x = ['max(d)', 'mean(d)', 'median(d)',
+             'max(Dmx)', 'mean(Dmx)', 'median(Dmx)', 'std(Dmx)',
+             'max(Dmn)', 'mean(Dmn)', 'median(Dmn)', 'std(Dmn)',
+             'max(Dmdn)', 'mean(Dmdn)', 'median(Dmdn)', 'std(Dmdn)',
+             'max(theta)', 'mean(theta)', 'median(theta)',
+             'max(thetaS)', 'mean(thetaS)', 'median(thetaS)', 'std(thetaS)'
+            ]
+        plt.figure(figsize=(22, 10), dpi=100)
+        plt.plot(x, self.plot1, '--', color = '#008000', marker='>', label='A > B')
+        plt.plot(x, self.plot2, '-', color = '#000000', marker='s', label='A = B')
+        plt.plot(x, self.plot3, '-.', color = '#FF0000', marker='<', label='A < B')
+        plt.title('A - список значений для исходного текста\nB - список значений для сгенерированного текста', fontsize=11, loc='left')
+        plt.xlabel('Статистики')
+        plt.ylabel('Значения')
+        plt.legend()
+        plt.grid()
+        plt.savefig('main_plot')
+
+
+    def __statisticsComp(self):
+        # deg
+        # 0
+        A = self.natural_statistics.maxD
+        B = self.gen_statistics.maxD
+        self.__dataPlot(A, B, 0)
+
+        # 1
+        A = self.natural_statistics.meanD
+        B = self.gen_statistics.meanD
+        self.__dataPlot(A, B, 1)
+
+        # 2
+        A = self.natural_statistics.medianD
+        B = self.gen_statistics.medianD
+        self.__dataPlot(A, B, 2)
+
+        # degMx
+        # 3
+        A = self.natural_statistics.maxDmx
+        B = self.gen_statistics.maxDmx
+        self.__dataPlot(A, B, 3)
+
+        # 4
+        A = self.natural_statistics.meanDmx
+        B = self.gen_statistics.meanDmx
+        self.__dataPlot(A, B, 4)
+
+        # 5
+        A = self.natural_statistics.medianDmx
+        B = self.gen_statistics.medianDmx
+        self.__dataPlot(A, B, 5)
+
+        # 6
+        A = self.natural_statistics.stdDmx
+        B = self.gen_statistics.stdDmx
+        self.__dataPlot(A, B, 6)
+
+        # degMn
+        # 7
+        A = self.natural_statistics.maxDmn
+        B = self.gen_statistics.maxDmn
+        self.__dataPlot(A, B, 7)
+
+        # 8
+        A = self.natural_statistics.meanDmn
+        B = self.gen_statistics.meanDmn
+        self.__dataPlot(A, B, 8)
+
+        # 9
+        A = self.natural_statistics.medianDmn
+        B = self.gen_statistics.medianDmn
+        self.__dataPlot(A, B, 9)
+
+        # 10
+        A = self.natural_statistics.stdDmn
+        B = self.gen_statistics.stdDmn
+        self.__dataPlot(A, B, 10)
+
+
+        # degMdn
+        # 11
+        A = self.natural_statistics.maxDmdn
+        B = self.gen_statistics.maxDmdn
+        self.__dataPlot(A, B, 11)
+
+        # 12
+        A = self.natural_statistics.meanDmdn
+        B = self.gen_statistics.meanDmdn
+        self.__dataPlot(A, B, 12)
+
+        # 13
+        A = self.natural_statistics.medianDmdn
+        B = self.gen_statistics.medianDmdn
+        self.__dataPlot(A, B, 13)
+
+        # 14
+        A = self.natural_statistics.stdDmdn
+        B = self.gen_statistics.stdDmdn
+        self.__dataPlot(A, B, 14)
+
+        # theta
+        # 15
+        A = self.natural_statistics.maxTheta
+        B = self.gen_statistics.maxTheta
+        self.__dataPlot(A, B, 15)
+
+        # 16
+        A = self.natural_statistics.meanTheta
+        B = self.gen_statistics.meanTheta
+        self.__dataPlot(A, B, 16)
+
+        # 17
+        A = self.natural_statistics.medianTheta
+        B = self.gen_statistics.medianTheta
+        self.__dataPlot(A, B, 17)
+
+        # thetaS
+        # 18
+        A = self.natural_statistics.maxThetaS
+        B = self.gen_statistics.maxThetaS
+        self.__dataPlot(A, B, 18)
+
+        # 19
+        A = self.natural_statistics.meanThetaS
+        B = self.gen_statistics.meanThetaS
+        self.__dataPlot(A, B, 19)
+
+        # 20
+        A = self.natural_statistics.medianThetaS
+        B = self.gen_statistics.medianThetaS
+        self.__dataPlot(A, B, 20)
+
+        # 21
+        A = self.natural_statistics.stdThetaS
+        B = self.gen_statistics.stdThetaS
+        self.__dataPlot(A, B, 21)
+
+
+    def __createDictionary(self, text):
+        punct = string.punctuation
+        punct += '—–...«»'
+        dictionary = []
+        for sent in range(len(text)):
+            for word in text[sent]:
+                if (word not in punct) and (word not in dictionary):
+                    dictionary.append(word)
+        return dictionary
 
 
     def __dataPlot(self, A, B, index):
@@ -423,8 +635,12 @@ class Statistics:
     def __createTheta(self, graph):
         theta = np.array([value for value in graph[0]])
         for i in range(1, len(graph) - 1):
+<<<<<<< Edits
             for j in range(i + 1, len(graph[i])):
                 theta = np.append(theta, graph[i][j])
+=======
+            theta = np.append(theta, graph[i][i+1:])
+>>>>>>> master
         theta.sort()
         return theta
 
