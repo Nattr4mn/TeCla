@@ -1,5 +1,4 @@
-import chardet
-import string
+import random, os, sys, string, chardet
 import pymorphy2 as pm
 import numpy as np
 from nltk.corpus import stopwords
@@ -7,13 +6,6 @@ from nltk.tokenize import word_tokenize
 from nltk.tokenize import sent_tokenize
 from razdel import tokenize
 from razdel import sentenize
-import random
-import os, sys
-import csv
-import math
-import time
-import matplotlib.pyplot as plt
-import matplotlib.gridspec as gridspec
 from Graph import Graph
 from Statistics import Statistics
 from BuildPlot import BuildPlot
@@ -29,6 +21,7 @@ class Text:
         self.__generated_text = []
         self.__dictionary = []
         self.__gen_dictionary = []
+        self.name_text = ''
         self.natural_statistics = 0
         self.gen_statistics = 0
         self.plot = BuildPlot(len(self.__file_list))
@@ -36,6 +29,7 @@ class Text:
 
     def text(self):
         for name_text in self.__file_list:
+            self.name_text = name_text
             print('Файл: ' + name_text)
             file = self.__path + name_text
             self.__encod = self.__encodingDefinition(file)
@@ -59,48 +53,47 @@ class Text:
 
                 self.plot.statisticsComp(self.natural_statistics ,self.gen_statistics)
 
-                self.__saveGenText(name_text)
                 self.__generated_text = []
                 self.__dictionary = []
                 self.__gen_dictionary = []
 
         self.plot.createPlots()
+        self.plot.createPlotsAV()
         self.plot = BuildPlot(len(self.__file_list))
 
 
     def __tokenize(self, rawtext):
+        dict_for_gen = []
         morph = pm.MorphAnalyzer()
-        sent_struct = []
         punct = string.punctuation
         punct += '—–...«»***\n '
-        word_feature = ''
-        dict_for_gen = []
+        sent_struct = []
         text_structure = []
+        word_feature = ''
 
-        text = list(sentenize(rawtext))
-        text = [_.text for _ in text]
+        text = sent_tokenize(rawtext)         #Токенизация по предложениям
 
         for sent in range(len(text)):
-            text[sent] = list(tokenize(text[sent].lower()))
+            text[sent] = list(tokenize(text[sent].lower()))         #Токенизация по словам
             text[sent] = [_.text for _ in text[sent]]
-
             #Создание структуры предложения
             sent_struct = []
-            for word in text[sent]:
-                word_feature = morph.parse(word)[0]
-                if str(word_feature.tag) == 'PNCT':
+            for word in range(len(text[sent])):
+                word_feature = morph.parse(text[sent][word])[0]
+                if str(word_feature.tag) == 'PNCT':             #Если текущий объект ялвяется пунктуацией, то записываем его в структуру без изменений
                     sent_struct.append(word_feature.word)
-                else:
+                else:           #Иначе записываем последовательность морф признаков в стркуктуру предложения
                     sent_struct.append(str(word_feature.tag))
 
-                if (word not in punct) and (word not in self.__dictionary):
-                    self.__dictionary.append(word)
-                    dict_for_gen.append(str(word_feature.tag))
-            text_structure.append(sent_struct)
+                if (text[sent][word] not in punct):         #Если текущий объект не ялвяется пунктуацией
+                    if (word_feature not in dict_for_gen):          #Если разобранного слова нет в словаре для генерации текста, то
+                        dict_for_gen.append(word_feature)           #мы добавляем данное слово в словарь
+                    if (word_feature.normal_form not in self.__dictionary):     #Если слова нет в словаре составленного по тексту написанного человека, то
+                        self.__dictionary.append(word_feature.normal_form)          #добавляем его
+                text[sent][word] = word_feature.normal_form
+            text_structure.append(sent_struct)          #Добавляем структуру предложения в общую структуру текста.
 
-        start_time = time.time()
-        self.__generation(text_structure, dict_for_gen)
-        print('Время генерации текста: ' + f"{(time.time() - start_time)/60} минут")
+        self.__generation(text_structure, dict_for_gen)             #Запускаем генерацию текста по исходном
         return text
 
 
@@ -108,27 +101,37 @@ class Text:
         generated_sent = []
         punct = string.punctuation
         punct += '—–...«»'
+        save_gen_sent = []
+        save_gen_text = []
 
         for sent in range(len(text_structure)):
             for word in text_structure[sent]:
-                if word not in punct:
-                    word_list = self.__findWords(word, dictionary)
-                    if len(word_list) != 0:
-                        indx = random.randint(0, len(word_list) - 1)
-                        if word_list[indx] not in self.__gen_dictionary:
-                            self.__gen_dictionary.append(word_list[indx])
-                        generated_sent.append(word_list[indx])
-                else:
-                    generated_sent.append(word)
-            self.__generated_text.append(generated_sent)
+                if word not in punct:           #Если объект структуры предложения не является пунктуацией, то
+                    word_list = self.__findWords(word, dictionary)      #Ищем слова подходящие по цепочке морфологических признаков
+                    if len(word_list) != 0:                             #Если список таких слова не пуст (а он не будет пустым)
+                        indx = random.randint(0, len(word_list) - 1)        #То выбираем случайным способом индекс слова
+                        if (word_list[indx].normal_form not in self.__gen_dictionary):      #Попутно пополняем словарь сгенерированного текста, если слова нет в словаре
+                            self.__gen_dictionary.append(word_list[indx].normal_form)       #Добавляем его
+                        generated_sent.append(word_list[indx].normal_form)          #Добавляем случайное слово из списка выше в предложение
+                        save_gen_sent.append(word_list[indx].word)
+                else:           #Если же объект является пунктуацие, то
+                    generated_sent.append(word)         #он добавляется в предложение без изменений
+                    save_gen_sent.append(word)
+
+            self.__generated_text.append(generated_sent)            #Добавление сгенерированного предложения в общий сгенерированный текст
+            save_gen_text.append(save_gen_sent)
+
+            save_gen_sent = []
             generated_sent = []
+
+        self.__saveGenText(save_gen_text)
 
 
     def __findWords(self, morph_param, dictionary):
         result = []
         for i in range(len(dictionary)):
-            if dictionary[i] == morph_param:
-                result.append(self.__dictionary[i])
+            if str(dictionary[i].tag) == morph_param:           #Если слово подходит по морфологически параметрам, то
+                result.append(dictionary[i])            #оно добавляется в результирующий список
         return result
 
 
@@ -153,12 +156,17 @@ class Text:
         return charenc
 
 
-    def __saveGenText(self, title):
+    def __saveGenText(self, text):
         save_text = ''
-        for sent in range(len(self.__generated_text)):
-            for word in self.__generated_text[sent]:
-                save_text += word + ' '
-        f = open('generated/gen_' + title, 'w', encoding=self.__encod)
+        punct = '.,;:'
+        delimiter = ' '
+
+        for sent in range(len(text)):
+            for word in range(len(text[sent])):
+                save_text += text[sent][word]
+                save_text += ' '
+
+        f = open('generated/gen_' + self.name_text, 'w', encoding=self.__encod)
         f.write(save_text)
         f.close()
         print('Сохранил сгенерированный текст!')

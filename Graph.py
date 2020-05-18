@@ -1,19 +1,6 @@
-import chardet
 import string
 import pymorphy2 as pm
 import numpy as np
-from nltk.corpus import stopwords
-from nltk.tokenize import word_tokenize
-from nltk.tokenize import sent_tokenize
-from razdel import tokenize
-from razdel import sentenize
-import random
-import os, sys
-import csv
-import math
-import time
-import matplotlib.pyplot as plt
-import matplotlib.gridspec as gridspec
 
 
 class Graph:
