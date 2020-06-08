@@ -59,6 +59,8 @@ class Text:
 
         self.plot.createPlots()
         self.plot.createPlotsAV()
+        self.plot.createPlotsSTD()
+        self.plot.createPlotsSTDmean()
         self.plot = BuildPlot(len(self.__file_list))
 
 
@@ -106,19 +108,19 @@ class Text:
 
         for sent in range(len(text_structure)):
             for word in text_structure[sent]:
-                if word not in punct:           #Если объект структуры предложения не является пунктуацией, то
-                    word_list = self.__findWords(word, dictionary)      #Ищем слова подходящие по цепочке морфологических признаков
-                    if len(word_list) != 0:                             #Если список таких слова не пуст (а он не будет пустым)
-                        indx = random.randint(0, len(word_list) - 1)        #То выбираем случайным способом индекс слова
-                        if (word_list[indx].normal_form not in self.__gen_dictionary):      #Попутно пополняем словарь сгенерированного текста, если слова нет в словаре
-                            self.__gen_dictionary.append(word_list[indx].normal_form)       #Добавляем его
-                        generated_sent.append(word_list[indx].normal_form)          #Добавляем случайное слово из списка выше в предложение
+                if word not in punct:
+                    word_list = self.__findWords(word, dictionary)
+                    if len(word_list) != 0:
+                        indx = random.randint(0, len(word_list) - 1)
+                        if (word_list[indx].normal_form not in self.__gen_dictionary):
+                            self.__gen_dictionary.append(word_list[indx].normal_form)
+                        generated_sent.append(word_list[indx].normal_form)
                         save_gen_sent.append(word_list[indx].word)
-                else:           #Если же объект является пунктуацие, то
-                    generated_sent.append(word)         #он добавляется в предложение без изменений
+                else:
+                    generated_sent.append(word)
                     save_gen_sent.append(word)
 
-            self.__generated_text.append(generated_sent)            #Добавление сгенерированного предложения в общий сгенерированный текст
+            self.__generated_text.append(generated_sent)
             save_gen_text.append(save_gen_sent)
 
             save_gen_sent = []

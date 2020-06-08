@@ -11,7 +11,7 @@ class Statistics:
         self.maxD = np.max(self.d)
         self.meanD = np.mean(self.d)
         self.medianD = np.median(self.d)
-        self.stdD = self.__std(self.d, self.meanD)
+        self.stdD = np.std(self.d)
         print('deg')
         print('Max: ' + str(self.maxD) + '. Mean: ' + str(self.meanD) + '. Median: ' + str(self.medianD))
 
@@ -20,7 +20,7 @@ class Statistics:
         self.maxDmx = np.max(self.dMx)
         self.meanDmx = np.mean(self.dMx)
         self.medianDmx = np.median(self.dMx)
-        self.stdDmx = self.__std(self.dMx, self.meanDmx)
+        self.stdDmx = np.std(self.dMx)
         print('degMx')
         print('Max: ' + str(self.maxDmx) + '. Mean: ' + str(self.meanDmx) + '. Median: ' + str(self.medianDmx) + '. Std: ' + str(self.stdDmx))
 
@@ -29,7 +29,7 @@ class Statistics:
         self.maxDmn = np.max(self.dMn)
         self.meanDmn = np.mean(self.dMn)
         self.medianDmn = np.median(self.dMn)
-        self.stdDmn = self.__std(self.dMn, self.meanDmn)
+        self.stdDmn = np.std(self.dMn)
         print('degMn')
         print('Max: ' + str(self.maxDmn) + '. Mean: ' + str(self.meanDmn) + '. Median: ' + str(self.medianDmn) + '. Std: ' + str(self.stdDmn))
 
@@ -38,7 +38,7 @@ class Statistics:
         self.maxDmdn = np.max(self.dMdn)
         self.meanDmdn = np.mean(self.dMdn)
         self.medianDmdn = np.median(self.dMdn)
-        self.stdDmdn = self.__std(self.dMdn, self.meanDmdn)
+        self.stdDmdn = np.std(self.dMdn)
         print('degMdn')
         print('Max: ' + str(self.maxDmdn) + '. Mean: ' + str(self.meanDmdn) + '. Median: ' + str(self.medianDmdn) + '. Std: ' + str(self.stdDmdn))
 
@@ -47,7 +47,7 @@ class Statistics:
         self.maxTheta = np.max(self.theta)
         self.meanTheta = np.mean(self.theta)
         self.medianTheta = np.median(self.theta)
-        self.stdTheta = self.__std(self.theta, self.meanTheta)
+        self.stdTheta = np.std(self.theta)
         print("theta")
         print('Max: ' + str(self.maxTheta) + '. Mean: ' + str(self.meanTheta) + '. Median: ' + str(self.medianTheta))
 
@@ -56,7 +56,7 @@ class Statistics:
         self.maxThetaS = np.max(self.thetaS)
         self.meanThetaS = np.mean(self.thetaS)
         self.medianThetaS = np.median(self.thetaS)
-        self.stdThetaS = self.__std(self.thetaS, self.meanThetaS)
+        self.stdThetaS = np.std(self.thetaS)
         print("thetaS")
         print('Max: ' + str(self.maxThetaS) + '. Mean: ' + str(self.meanThetaS) + '. Median: ' + str(self.medianThetaS) + '. Std: ' + str(self.stdThetaS))
         print('_______________________________________________________________________________________________________________________')
@@ -107,12 +107,3 @@ class Statistics:
         thetaS = thetaS / quantitySent
         thetaS.sort()
         return thetaS
-
-
-    def __std(self, selection, mean):
-        std = 0
-        n = len(selection)
-        for x in selection:
-            std += (x - mean) * (x - mean)
-        std = math.sqrt((1/n * std))
-        return std
