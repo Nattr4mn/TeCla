@@ -7,14 +7,15 @@ from razdel import tokenize
 
 
 class TextProcessing:
-    def __init__(self, originText):
-        self.__text = originText
+    def __init__(self):
+        self.__text = ''
         self.__textStruct = []
         self.__tokens = None
         self.__wordCount = 0
 
 
-    def Processing(self):
+    def Processing(self, originText):
+        self.__text = originText
         punct = string.punctuation
         punct += '—–...«»***\n '
 
@@ -23,24 +24,8 @@ class TextProcessing:
         for sentence in range(len(self.__tokens)):
             self.__tokens[sentence] = list(tokenize(self.__tokens[sentence].lower()))          #Токенизация по словам
             self.__tokens[sentence] = [_.text for _ in self.__tokens[sentence]]
-            self.__CreateStructure(self.__tokens[sentence])
+            # self.__CreateStructure(self.__tokens[sentence])
             self.__tokens[sentence] = [word for word in self.__tokens[sentence] if word not in punct]
-
-
-    def GetTokens(self):
-        return self.__tokens
-
-
-    def GetText(self):
-        return self.__text
-
-
-    def GetStructure(self):
-        return self.__textStruct
-
-
-    def GetWordsCount(self):
-        return self.__wordCount
 
 
     # Создание структуры предложения
@@ -56,3 +41,22 @@ class TextProcessing:
                 self.__wordCount += 1
 
         self.__textStruct.append(sent_struct)                                                       # Добавляем структуру предложения в общую структуру текста.
+
+
+    def Tokens(self):
+        return self.__tokens
+
+
+    def Text(self):
+        return self.__text
+
+
+    def Structure(self):
+        return self.__textStruct
+
+
+    def WordsCount(self):
+        return self.__wordCount
+
+    def TextSize(self):
+        return len(self.__tokens)

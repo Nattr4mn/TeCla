@@ -1,6 +1,9 @@
 import os,chardet
+from multiprocessing import Process
 
 from DictionaryManager import DictionaryManager
+from GraphBuilder import GraphBuilder
+from TextGenerator import TextGenerator
 from TextProcessing import TextProcessing
 
 
@@ -8,12 +11,15 @@ class TextClassification:
     def __init__(self, path):
         self.__path = path
         self.__fileList = os.listdir(path)
-        self.__naturalDocuments = []
-        self.__dictionary = DictionaryManager()
 
 
     def Start(self):
-        originText = ""
+        bigText = ""
+
+        textProcessing = TextProcessing()
+        dictionary = DictionaryManager()
+        graph = GraphBuilder()
+
         for fileName in self.__fileList:
             self.fileName = fileName
             file = self.__path + '\\' + fileName
@@ -21,9 +27,14 @@ class TextClassification:
             with open(file, encoding = encoding) as text:
                 originText = text.read()
 
-            textProcessing = TextProcessing(originText)
-            textProcessing.Processing()
-            self.__naturalDocuments.append(textProcessing)
+            bigText += originText
+
+        textProcessing.Processing(bigText)
+        dictionary.CreateDictionary(bigText)
+        graph.CreateGraph(bigText)
+        textGen = TextGenerator(textProcessing.TextSize(), dictionary.Dictionary())
+        textGen.MarkovGeneration()
+        graph.CreateGraph(textGen.Text())
 
 
     def __encodingDefinition(self, path):
