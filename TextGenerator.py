@@ -16,6 +16,7 @@ class TextGenerator:
     def MarkovGeneration(self):
         punct = string.punctuation
         punct += '—–...«»***\n '
+        self.__text = ''
         curWord = '@START'
 
         for sentenceCount in range(self.__textSize):
@@ -46,6 +47,10 @@ class TextGenerator:
 
 
 
+    def SaveGenText(self, path, fileName):
+        f = open(path + str(fileName) + '.txt', 'w', encoding='UTF-8')
+        f.write(self.__text)
+        f.close()
 
 
 

@@ -13,7 +13,6 @@ class DictionaryManager:
     def CreateDictionary(self, text):
         punct = string.punctuation
         punct += '—–...«»***\n '
-
         tokens = self.__TextTokenize(text)
 
         for sentence in range(len(tokens)):

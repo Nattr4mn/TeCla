@@ -3,6 +3,8 @@ from multiprocessing import Process
 
 from DictionaryManager import DictionaryManager
 from GraphBuilder import GraphBuilder
+from PlotBuilder import PlotBuilder
+from Statistics import Statistics
 from TextGenerator import TextGenerator
 from TextProcessing import TextProcessing
 
@@ -14,11 +16,12 @@ class TextClassification:
 
 
     def Start(self):
-        bigText = ""
-
         textProcessing = TextProcessing()
         dictionary = DictionaryManager()
-        graph = GraphBuilder()
+        natGraph = GraphBuilder()
+        genGraph = GraphBuilder()
+        texts = []
+        plot = PlotBuilder(len(self.__fileList))
 
         for fileName in self.__fileList:
             self.fileName = fileName
@@ -27,14 +30,26 @@ class TextClassification:
             with open(file, encoding = encoding) as text:
                 originText = text.read()
 
-            bigText += originText
+            texts.append(originText)
+            dictionary.CreateDictionary(originText)
 
-        textProcessing.Processing(bigText)
-        dictionary.CreateDictionary(bigText)
-        graph.CreateGraph(bigText)
-        textGen = TextGenerator(textProcessing.TextSize(), dictionary.Dictionary())
-        textGen.MarkovGeneration()
-        graph.CreateGraph(textGen.Text())
+        textNumber = 0
+        for text in texts:
+            textProcessing.Processing(text)
+            natGraph.CreateGraph(text)
+
+            textGen = TextGenerator(textProcessing.TextSize(), dictionary.Dictionary())
+            textGen.MarkovGeneration()
+            genGraph.CreateGraph(textGen.Text())
+            textGen.SaveGenText('generated/', 'text_' + str(textNumber) )
+            textNumber += 1
+
+            plot.StatisticsComp(Statistics(natGraph.Graph(), textProcessing.TextSize()), Statistics(genGraph.Graph(), textProcessing.TextSize()))
+
+        plot.CreatePlots()
+        plot.CreatePlotsAV()
+        plot.CreatePlotsSTD()
+        plot.CreatePlotsSTDmean()
 
 
     def __encodingDefinition(self, path):
