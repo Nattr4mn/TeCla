@@ -3,4 +3,8 @@
 /[Dd]ocuments/
 /[Vv]env/
 /[Pp]lots
+/[Gg]enerated[Ss]truct/
+/[Gg]enerated/
+/generatedRandom/
+/generatedByStructure/
 main.py

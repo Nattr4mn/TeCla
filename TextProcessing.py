@@ -10,12 +10,14 @@ class TextProcessing:
     def __init__(self):
         self.__text = ''
         self.__textStruct = []
+        self.__wordsSentencesCount = []
         self.__tokens = None
         self.__wordCount = 0
 
 
     def Processing(self, originText):
         self.__text = originText
+        self.__textStruct = []
         punct = string.punctuation
         punct += '—–...«»***\n '
 
@@ -26,18 +28,21 @@ class TextProcessing:
             self.__tokens[sentence] = [_.text for _ in self.__tokens[sentence]]
             self.__CreateStructure(self.__tokens[sentence])
             self.__tokens[sentence] = [word for word in self.__tokens[sentence] if word not in punct]
+            self.__wordsSentencesCount.append(len(self.__tokens[sentence]))
 
 
     # Создание структуры предложения
     def __CreateStructure(self, sentence):
+        self.__wordCount = 0
         morph = pm.MorphAnalyzer()
         sent_struct = []
+
         for word in range(len(sentence)):
             word_feature = morph.parse(sentence[word])[0]
             if str(word_feature.tag) == 'PNCT':                                                     # Если текущий объект ялвляется пунктуацией, то записываем его в структуру без изменений
                 sent_struct.append(word_feature.word)
             else:                                                                                   # Иначе записываем последовательность морф признаков в стркуктуру предложения
-                sent_struct.append(str(word_feature.tag))
+                sent_struct.append(str(word_feature.tag.POS))
                 self.__wordCount += 1
 
         self.__textStruct.append(sent_struct)                                                       # Добавляем структуру предложения в общую структуру текста.
@@ -45,6 +50,10 @@ class TextProcessing:
 
     def Tokens(self):
         return self.__tokens
+
+
+    def WordsInSentencesCount(self):
+        return self.__wordsSentencesCount
 
 
     def Text(self):

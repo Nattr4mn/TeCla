@@ -1,4 +1,6 @@
+import os
 import string
+import pickle
 
 from nltk import sent_tokenize
 from razdel import tokenize
@@ -8,6 +10,17 @@ class DictionaryManager:
     def __init__(self):
         self.__dictionary = {}
         self.__wordCount = 0
+
+
+    def LoadDictionary(self):
+        if os.path.exists('dictionary.pickle'):
+            with open('dictionary.pickle', 'rb') as f:
+                self.__dictionary = pickle.load(f)
+
+
+    def SaveDictionary(self):
+        with open('dictionary.pickle', 'wb') as f:
+            pickle.dump(self.__dictionary, f)
 
 
     def CreateDictionary(self, text):

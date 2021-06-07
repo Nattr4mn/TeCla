@@ -55,7 +55,7 @@ class PlotBuilder:
         self.__DataPlot(natural_statistics.stdThetaS, gen_statistics.stdThetaS, 'std(θS)')
 
 
-    def CreatePlots(self):
+    def CreatePlots(self, plotId):
         for key in self.plot1.keys():
             self.plot1[key] /= self.textCount
             self.plot2[key] /= self.textCount
@@ -80,10 +80,10 @@ class PlotBuilder:
         plt.legend()
         plt.grid()
         numb = random.randint(1, 1000)
-        plt.savefig('plots/plot')
+        plt.savefig('plots/plot' + str(plotId))
 
 
-    def CreatePlotsAV(self):
+    def CreatePlotsAV(self, plotId):
         for key in self.plot1.keys():
             self.absolute_value[key] /= self.textCount
 
@@ -101,10 +101,10 @@ class PlotBuilder:
         plt.title('Абсолютная разность величин графа', fontsize=11, loc='left')
         plt.grid()
         numb = random.randint(1, 1000)
-        plt.savefig('plots/av_plot')
+        plt.savefig('plots/av_plot' + str(plotId))
 
 
-    def CreatePlotsSTD(self):
+    def CreatePlotsSTD(self, plotId):
         for key in self.plot1.keys():
             self.nat_std_stat[key] = np.std(self.nat_statistics[key])
             self.gen_std_stat[key] = np.std(self.gen_statistics[key])
@@ -124,10 +124,10 @@ class PlotBuilder:
         plt.title('Стандартное отклонение величин\nA - список значений для исходного текста\nB - список значений для сгенерированного текста', fontsize=11, loc='left')
         plt.legend()
         plt.grid()
-        plt.savefig('plots/std_plot')
+        plt.savefig('plots/std_plot' + str(plotId))
 
 
-    def CreatePlotsSTDmean(self):
+    def CreatePlotsSTDmean(self, plotId):
         for key in self.plot1.keys():
             self.nat_std_mean_stat[key] = np.std(self.nat_statistics[key]) / np.mean(self.nat_statistics[key])
             self.gen_std_mean_stat[key] = np.std(self.gen_statistics[key]) / np.mean(self.gen_statistics[key])
@@ -147,7 +147,7 @@ class PlotBuilder:
         plt.title('Отношение стандартного отклонения к среднему значению величин\nA - список значений для исходного текста\nB - список значений для сгенерированного текста', fontsize=11, loc='left')
         plt.legend()
         plt.grid()
-        plt.savefig('plots/std_mean_plot')
+        plt.savefig('plots/std_mean_plot' + str(plotId))
 
     def __CreateDict(self):
         return {'max(d)': 0, 'median(d)':0, 'mean(d)':0, 'std(d)':0,
