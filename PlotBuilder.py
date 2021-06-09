@@ -3,8 +3,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 class PlotBuilder:
-    def __init__(self, textCount):
-        self.textCount = textCount
+    def __init__(self):
         self.nat_statistics = self.__CreateDictLists();
         self.gen_statistics = self.__CreateDictLists();
         self.nat_std_stat = self.__CreateDict()
@@ -55,11 +54,11 @@ class PlotBuilder:
         self.__DataPlot(natural_statistics.stdThetaS, gen_statistics.stdThetaS, 'std(θS)')
 
 
-    def CreatePlots(self, plotId):
+    def CreatePlots(self, textCount, plotId):
         for key in self.plot1.keys():
-            self.plot1[key] /= self.textCount
-            self.plot2[key] /= self.textCount
-            self.plot3[key] /= self.textCount
+            self.plot1[key] /= textCount
+            self.plot2[key] /= textCount
+            self.plot3[key] /= textCount
 
         fig = plt.figure(figsize=(15, 8), dpi=100)
         ax = fig.add_subplot(111)
@@ -83,9 +82,9 @@ class PlotBuilder:
         plt.savefig('plots/plot' + str(plotId))
 
 
-    def CreatePlotsAV(self, plotId):
+    def CreatePlotsAV(self, textCount, plotId):
         for key in self.plot1.keys():
-            self.absolute_value[key] /= self.textCount
+            self.absolute_value[key] /= textCount
 
         fig = plt.figure(figsize=(15, 8), dpi=100)
         ax = fig.add_subplot(111)
@@ -149,6 +148,7 @@ class PlotBuilder:
         plt.grid()
         plt.savefig('plots/std_mean_plot' + str(plotId))
 
+
     def __CreateDict(self):
         return {'max(d)': 0, 'median(d)':0, 'mean(d)':0, 'std(d)':0,
                 'max(Dmx)': 0, 'mean(Dmx)': 0, 'median(Dmx)': 0, 'std(Dmx)': 0,
@@ -157,6 +157,7 @@ class PlotBuilder:
                 'max(θ)': 0, 'mean(θ)': 0, 'median(θ)': 0, 'std(θ)': 0,
                 'max(θS)': 0, 'mean(θS)': 0, 'median(θS)': 0, 'std(θS)': 0
                 }
+
 
     def __CreateDictLists(self):
         return {'max(d)': [], 'median(d)': [], 'mean(d)': [], 'std(d)': [],

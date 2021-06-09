@@ -1,5 +1,6 @@
 /.[Ii]dea/
 /__[Pp]y[Cc]ache__/
+/[Cc]orpus/
 /[Dd]ocuments/
 /[Vv]env/
 /[Pp]lots
@@ -7,4 +8,6 @@
 /[Gg]enerated/
 /generatedRandom/
 /generatedByStructure/
+test
 main.py
+[Dd]ictionary.pickle

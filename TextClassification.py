@@ -1,109 +1,57 @@
-import os,chardet
-from multiprocessing import Process
+import os
+
+from chardet import UniversalDetector
+from nltk import sent_tokenize
 
 from DictionaryManager import DictionaryManager
 from GraphBuilder import GraphBuilder
 from PlotBuilder import PlotBuilder
 from Statistics import Statistics
 from TextGenerator import TextGenerator
-from TextProcessing import TextProcessing
 
 
 class TextClassification:
-    def __init__(self, originCorpus):
-        self.__originCorpus = originCorpus
-        self.__fileList = os.listdir(originCorpus)
-        self.__dictionary = DictionaryManager()
-        self.__naturalProcessedDocuments = []
-        self.__generatedDocuments = []
+    def __init__(self):
+        self.__textCount = 0
+        self.__plot = PlotBuilder()
 
 
-    def LoadDictionery(self):
-        self.__dictionary.LoadDictionary()
-        print(len(self.__dictionary.Dictionary()))
-
-
-    def CreateDectionaryFromCorpus(self, loadDictionary = False, saveDictionary = False):
-        self.__dictionary.LoadDictionary()
-
-        for fileName in self.__fileList:
-            file = self.__originCorpus + '\\' + fileName
-            encoding = self.__encodingDefinition(file)
-            with open(file, encoding = encoding) as document:
-                self.__dictionary.CreateDictionary(document.read())
-
-        if saveDictionary == True:
-            self.__dictionary.SaveDictionary()
-
-
-    def TextProcessing(self):
-        textProcessing = TextProcessing()
-
-        for fileName in self.__fileList:
-            file = self.__originCorpus + '\\' + fileName
-            encoding = self.__encodingDefinition(file)
-            with open(file, encoding = encoding) as document:
-                textProcessing.Processing(document.read())
-
-            self.__naturalProcessedDocuments.append(textProcessing)
-
-
-    def DocumentsAnalysis(self, plotNameForSave = ''):
+    def DocumentsAnalysis(self, naturalText='', generatedText=''):
         natGraph = GraphBuilder()
+        natTextSize = len(sent_tokenize(naturalText))
+        genTextSize = len(sent_tokenize(generatedText))
         genGraph = GraphBuilder()
-        plot = PlotBuilder(len(self.__fileList))
 
-        for documentIndex in range(len(self.__naturalProcessedDocuments)):
-            natGraph.CreateGraph(self.__naturalProcessedDocuments[documentIndex].Text())
-            genGraph.CreateGraph(self.__generatedDocuments[documentIndex])
-            plot.StatisticsComp(Statistics(natGraph.Graph(), self.__naturalProcessedDocuments[documentIndex].TextSize()), Statistics(genGraph.Graph(), self.__naturalProcessedDocuments[documentIndex].TextSize()))
-
-        plot.CreatePlots(plotNameForSave)
-        plot.CreatePlotsAV(plotNameForSave)
-        plot.CreatePlotsSTD(plotNameForSave)
-        plot.CreatePlotsSTDmean(plotNameForSave)
+        natGraph.CreateGraph(naturalText)
+        genGraph.CreateGraph(generatedText)
+        self.__plot.StatisticsComp(Statistics(natGraph.Graph(), natTextSize), Statistics(genGraph.Graph(), genTextSize))
+        self.__textCount += 1
 
 
-    def RandomMarkovGeneration(self):
-        self.__generatedDocuments = []
-
-        textNumber = 0
-        for document in self.__naturalProcessedDocuments:
-            genDocument = TextGenerator(self.__dictionary.Dictionary())
-            genDocument.RandomMarkovGeneration(document.TextSize())
-            genDocument.SaveGenText('generatedRandom/', 'text_' + str(textNumber))
-            textNumber += 1
-            self.__generatedDocuments.append(genDocument)
+    def BuildPlots(self, plotNameForSave = ''):
+        self.__plot.CreatePlots(self.__textCount, plotNameForSave)
+        self.__plot.CreatePlotsAV(self.__textCount, plotNameForSave)
+        self.__plot.CreatePlotsSTD(plotNameForSave)
+        self.__plot.CreatePlotsSTDmean(plotNameForSave)
 
 
-    def MarkovGenerationByStructure(self):
-        self.__generatedDocuments = []
-
-        textNumber = 0
-        for document in self.__naturalProcessedDocuments:
-            genDocument = TextGenerator(self.__dictionary.Dictionary())
-            genDocument.MarkovGenerationByStructure(document.Structure())
-            genDocument.SaveGenText('generatedByStructure/', 'text_' + str(textNumber))
-            textNumber += 1
-            self.__generatedDocuments.append(genDocument)
+    def MarkovGeneration(self, srcText='', srcTextTitle='text', dictionary=DictionaryManager()):
+        genDocument = TextGenerator()
+        genDocument.MarkovGeneration(srcText, dictionary)
+        if os.path.exists('generated') == False:
+            os.mkdir('generated')
+        genDocument.SaveGenText('generated/', srcTextTitle)
 
 
-    def MarkovGenerationByMorphStructure(self):
-        self.__generatedDocuments = []
+    def EncodingDefinition(self, path):
+        detector = UniversalDetector()
+        for line in open(path, 'rb'):
+                detector.feed(line)
+                if detector.done: break
 
-        textNumber = 0
-        for document in self.__naturalProcessedDocuments:
-            genDocument = TextGenerator(self.__dictionary.Dictionary())
-            genDocument.MarkovGenerationByMorphStructure(document.Structure())
-            genDocument.SaveGenText('generatedByMorphStructure/', 'text_' + str(textNumber))
-            textNumber += 1
-            self.__generatedDocuments.append(genDocument)
+        detector.close()
+        return detector.result['encoding']
 
 
-    def __encodingDefinition(self, path):
-        file = open(path, 'rb')
-        rawdata = file.read()
-        result = chardet.detect(rawdata)
-        encoding = result['encoding']
-        file.close()
-        return encoding
+    def __Message(self, message):
+        print(message)
